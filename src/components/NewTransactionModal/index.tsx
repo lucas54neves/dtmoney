@@ -4,104 +4,114 @@ import incomeImage from "../../assets/income.svg";
 import outcomeImage from "../../assets/outcome.svg";
 import closeImage from "../../assets/close.svg";
 import { FormEvent, useState } from "react";
-import { api } from "../../services/api";
+import { useTransactions } from "../../hooks/useTransactions";
 
 type NewTransactionModalProps = {
-    isOpen: boolean;
-    onRequestClose: () => void;
+  isOpen: boolean;
+  onRequestClose: () => void;
 };
 
 export function NewTransactionModal({
-    isOpen,
-    onRequestClose,
+  isOpen,
+  onRequestClose,
 }: NewTransactionModalProps) {
-    const [title, setTitle] = useState("");
-    const [value, setValue] = useState(0);
-    const [type, setType] = useState("deposit");
-    const [category, setCategory] = useState("");
+  const { createTransaction } = useTransactions();
 
-    const handleDepositType = () => {
-        setType("deposit");
-    };
+  const [title, setTitle] = useState("");
+  const [amount, setAmount] = useState(0);
+  const [type, setType] = useState("deposit");
+  const [category, setCategory] = useState("");
 
-    const handleWithdrawType = () => {
-        setType("withdraw");
-    };
+  const handleDepositType = () => {
+    setType("deposit");
+  };
 
-    const handleCreateNewTransaction = (event: FormEvent) => {
-        event.preventDefault();
+  const handleWithdrawType = () => {
+    setType("withdraw");
+  };
 
-        const data = {
-            title,
-            value,
-            category,
-            type,
-        };
+  const setDefault = () => {
+    setTitle("");
+    setAmount(0);
+    setType("deposit");
+    setCategory("");
+  };
 
-        api.post("/transactions", data);
-    };
+  const handleCreateNewTransaction = async (event: FormEvent) => {
+    event.preventDefault();
 
-    return (
-        <Modal
-            isOpen={isOpen}
-            onRequestClose={onRequestClose}
-            overlayClassName={"react-modal-overlay"}
-            className="react-modal-content"
-        >
-            <button
-                type="button"
-                onClick={onRequestClose}
-                className="react-modal-close"
-            >
-                <img src={closeImage} alt="Fechar modal" />
-            </button>
+    await createTransaction({
+      title,
+      amount,
+      type,
+      category,
+    });
 
-            <Container onSubmit={handleCreateNewTransaction}>
-                <h2>Cadastrar Transação</h2>
+    setDefault();
+    onRequestClose();
+  };
 
-                <input
-                    placeholder="Título"
-                    value={title}
-                    onChange={(event) => setTitle(event.target.value)}
-                />
+  return (
+    <Modal
+      isOpen={isOpen}
+      onRequestClose={onRequestClose}
+      overlayClassName={"react-modal-overlay"}
+      className="react-modal-content"
+    >
+      <button
+        type="button"
+        onClick={onRequestClose}
+        className="react-modal-close"
+      >
+        <img src={closeImage} alt="Fechar modal" />
+      </button>
 
-                <input
-                    type="number"
-                    placeholder="Valor"
-                    value={value}
-                    onChange={(event) => setValue(Number(event.target.value))}
-                />
+      <Container onSubmit={handleCreateNewTransaction}>
+        <h2>Cadastrar Transação</h2>
 
-                <TransactionTypeContainer>
-                    <RadioBox
-                        type="button"
-                        onClick={handleDepositType}
-                        isActive={type === "deposit"}
-                        activeColor="green"
-                    >
-                        <img src={incomeImage} alt="Entrada" />
-                        <span>Entrada</span>
-                    </RadioBox>
+        <input
+          placeholder="Título"
+          value={title}
+          onChange={(event) => setTitle(event.target.value)}
+        />
 
-                    <RadioBox
-                        type="button"
-                        onClick={handleWithdrawType}
-                        isActive={type === "withdraw"}
-                        activeColor="red"
-                    >
-                        <img src={outcomeImage} alt="Saída" />
-                        <span>Saída</span>
-                    </RadioBox>
-                </TransactionTypeContainer>
+        <input
+          type="number"
+          placeholder="Valor"
+          value={amount}
+          onChange={(event) => setAmount(Number(event.target.value))}
+        />
 
-                <input
-                    placeholder="Categoria"
-                    value={category}
-                    onChange={(event) => setCategory(event.target.value)}
-                />
+        <TransactionTypeContainer>
+          <RadioBox
+            type="button"
+            onClick={handleDepositType}
+            isActive={type === "deposit"}
+            activeColor="green"
+          >
+            <img src={incomeImage} alt="Entrada" />
+            <span>Entrada</span>
+          </RadioBox>
 
-                <button type="submit">Cadastrar</button>
-            </Container>
-        </Modal>
-    );
+          <RadioBox
+            type="button"
+            onClick={handleWithdrawType}
+            isActive={type === "withdraw"}
+            activeColor="red"
+          >
+            <img src={outcomeImage} alt="Saída" />
+            <span>Saída</span>
+          </RadioBox>
+        </TransactionTypeContainer>
+
+        <input
+          placeholder="Categoria"
+          value={category}
+          onChange={(event) => setCategory(event.target.value)}
+        />
+
+        <button type="submit">Cadastrar</button>
+      </Container>
+    </Modal>
+  );
 }
